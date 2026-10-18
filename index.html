@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#b1222c">
+<title>Hand, Knee &amp; Foot Scorekeeper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,700&family=Libre+Franklin:wght@400;500;600;700&display=swap">
+<style>
+/* Phone-first single column: sticky tabs on top, live round total + save pinned to the bottom. */
+:root {
+  --bg: #f6f5f3;
+  --surface: #ffffff;
+  --ink: #1b1a19;
+  --muted: #67625d;
+  --line: #e1dcd6;
+  --red: #b1222c;
+  --red-soft: #f8e8e9;
+  --on-red: #ffffff;
+  --good: #1d7347;
+  --good-soft: #e3f2e9;
+  --display: 'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, serif;
+  --body: 'Libre Franklin', -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --bar-h: 76px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141211; --surface: #1e1b1a; --ink: #f1ece7; --muted: #a39b94; --line: #35302d;
+    --red: #f0646c; --red-soft: #3a1d20; --on-red: #1b0d0e; --good: #5cc98f; --good-soft: #17301f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141211; --surface: #1e1b1a; --ink: #f1ece7; --muted: #a39b94; --line: #35302d;
+  --red: #f0646c; --red-soft: #3a1d20; --on-red: #1b0d0e; --good: #5cc98f; --good-soft: #17301f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.45 var(--body);
+  -webkit-text-size-adjust: 100%;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--surface);
+}
+.wrap {
+  max-width: 600px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+/* Header */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 10px; }
+.brand { margin: 0; font: 700 19px/1.1 var(--display); white-space: nowrap; }
+.brand em { color: var(--red); font-weight: 500; }
+.tabs { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--bg); }
+.tabs button {
+  border: 0; background: none; padding: 6px 10px; border-radius: 7px;
+  font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap;
+}
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .12); }
+
+main { padding-block: 16px calc(var(--bar-h) + 28px + env(safe-area-inset-bottom, 0px)); }
+main.no-bar { padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
+.panel { display: flex; flex-direction: column; gap: 16px; }
+h2 { margin: 0; font: 700 22px/1.2 var(--display); text-wrap: balance; }
+h3 { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+p { margin: 0; }
+.muted { color: var(--muted); font-size: 13px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+
+/* Scoreboard */
+.board { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.board .tname { font-size: 13px; font-weight: 600; color: var(--muted); }
+.board .ttotal { font: 700 44px/1.05 var(--display); font-variant-numeric: lining-nums tabular-nums; }
+.board .ttotal.neg { color: var(--red); }
+.board .meta { text-align: right; font-size: 13px; color: var(--muted); }
+.board .meta b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* History */
+.hist { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+.hist th, .hist td { padding: 8px 4px; border-bottom: 1px solid var(--line); text-align: right; }
+.hist th { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.hist th:first-child, .hist td:first-child { text-align: left; width: 40px; }
+.hist td:last-child, .hist th:last-child { width: 58px; }
+.hist td.run { font-weight: 700; }
+.hist tr.editing td { background: var(--red-soft); }
+.hist tr:last-child td { border-bottom: 0; }
+.hist .neg { color: var(--red); }
+.outtag { font-size: 10px; font-weight: 700; color: var(--good); margin-left: 4px; text-transform: uppercase; }
+.linkbtn { border: 0; background: none; padding: 4px 0; color: var(--red); font-weight: 600; font-size: 13px; }
+
+/* Segmented controls */
+.seg { display: flex; padding: 3px; gap: 3px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+.seg button {
+  flex: 1 1 0; min-width: 0; min-height: 40px; border: 0; border-radius: 7px; background: none;
+  font-size: 14px; font-weight: 600; color: var(--muted); padding: 4px 6px; line-height: 1.2;
+}
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+/* Entry form */
+.block { display: flex; flex-direction: column; }
+.bhead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-bottom: 4px; }
+.bhead .sub { font-weight: 700; font-variant-numeric: tabular-nums; }
+.row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--line);
+}
+.row:last-child { border-bottom: 0; }
+.lbl { min-width: 0; }
+.lbl b { display: block; font-weight: 600; }
+.lbl small { display: block; color: var(--muted); font-size: 12px; }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.stepper button {
+  width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--bg); font-size: 20px; line-height: 1; touch-action: manipulation;
+}
+.stepper button:active { background: var(--line); }
+.num {
+  width: 52px; height: 40px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface); text-align: center; font-size: 17px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.num.wide { width: 120px; }
+.num:focus { border-color: var(--red); outline: none; }
+.req { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 6px; }
+.chip {
+  font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+  border: 1px dashed var(--muted); color: var(--muted);
+}
+.chip.on { border: 1px solid var(--good); background: var(--good-soft); color: var(--good); }
+.warn {
+  padding: 9px 11px; border-radius: 10px; background: var(--red-soft); color: var(--ink); font-size: 13px;
+  border-left: 3px solid var(--red);
+}
+.ok { padding: 9px 11px; border-radius: 10px; background: var(--good-soft); font-size: 13px; border-left: 3px solid var(--good); }
+.breakdown { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.breakdown td { padding: 5px 0; border-bottom: 1px solid var(--line); }
+.breakdown td:last-child { text-align: right; font-weight: 600; white-space: nowrap; padding-left: 10px; }
+.breakdown tr.sum td { border-bottom: 0; padding-top: 9px; font-size: 18px; font-weight: 700; }
+.breakdown .neg { color: var(--red); }
+
+/* Bottom bar */
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.bar .wrap { display: flex; align-items: center; gap: 12px; min-height: var(--bar-h); padding-block: 10px; }
+.bartotals { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; font-size: 13px; color: var(--muted); }
+.bartotals span { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bartotals b { color: var(--ink); font-size: 16px; }
+.btn {
+  min-height: 46px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--bg); font-weight: 600; white-space: nowrap;
+}
+a.btn { display: inline-flex; align-items: center; text-decoration: none; }
+.btn.primary { background: var(--red); border-color: var(--red); color: var(--on-red); }
+.btn.danger { color: var(--red); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* Points + game */
+.field { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.field:last-child { border-bottom: 0; }
+.namefield { display: block; }
+.namefield span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+.namefield input {
+  width: 100%; height: 42px; border: 1px solid var(--line); border-radius: 10px; padding: 0 10px; background: var(--surface);
+}
+.switch { width: 22px; height: 22px; accent-color: var(--red); }
+
+/* Rules */
+.rules ul, .rules ol { margin: 0; padding-left: 20px; }
+.rules li { margin: 4px 0; }
+.rules li::marker { color: var(--red); font-weight: 700; }
+.deal { display: flex; gap: 8px; }
+.deal div {
+  flex: 1; text-align: center; padding: 8px 0; border: 1.5px solid var(--ink); border-radius: 8px;
+  box-shadow: 2px 2px 0 var(--surface), 3px 3px 0 var(--ink);
+}
+.deal b { display: block; font: 700 24px/1 var(--display); }
+.deal span { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.vals { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.vals td { padding: 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.vals tr:last-child td { border-bottom: 0; }
+.vals td:last-child { text-align: right; font-weight: 700; white-space: nowrap; padding-left: 10px; }
+.vals small { display: block; color: var(--muted); font-size: 12px; }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 8;
+  bottom: calc(var(--bar-h) + 14px + env(safe-area-inset-bottom, 0px));
+  background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+  transition: opacity .2s; max-width: calc(100% - 32px);
+}
+.toast:empty { opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+@media (max-width: 380px) {
+  .brand { font-size: 16px; }
+  .tabs button { padding: 6px 7px; font-size: 12px; }
+  .stepper button { width: 36px; }
+  .num { width: 46px; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="brand">Hand <em>Knee &amp;</em> Foot</p>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" id="tab-score" data-tab="score" aria-selected="true">Score</button>
+      <button role="tab" id="tab-rules" data-tab="rules" aria-selected="false">Rules</button>
+      <button role="tab" id="tab-values" data-tab="values" aria-selected="false">Points</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <section class="panel" id="panel-score" role="tabpanel" aria-labelledby="tab-score">
+    <div class="card board" id="board"></div>
+    <div class="card" id="historybox"></div>
+    <div class="card stack" id="roundbox"></div>
+    <div class="card stack" id="gamebox"></div>
+  </section>
+  <section class="panel rules" id="panel-rules" role="tabpanel" aria-labelledby="tab-rules" hidden></section>
+  <section class="panel" id="panel-values" role="tabpanel" aria-labelledby="tab-values" hidden></section>
+</main>
+
+<div class="bar" id="bar"><div class="wrap" id="barinner"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const HOUSE = {
+  book_sevens: 5000, book_fives: 3000, book_wilds: 2500, book_clean: 500, book_dirty: 300,
+  joker: 50, two: 20, ace: 20, high: 10, low: 5,
+  redThreeEach: 100, redThreeBonus: 1000, redThreeBonusAt: 7, redThreeHeld: 500, blackThreeHeld: 100,
+  goingOut: 0, countLaidDown: true
+};
+const BOOKS = [
+  ['sevens', 'Sevens', 'Seven 7s, no wilds'],
+  ['fives', 'Fives', 'Seven 5s, no wilds'],
+  ['wilds', 'Wilds', '2s and jokers'],
+  ['clean', 'Clean', 'One rank, no wilds'],
+  ['dirty', 'Dirty', 'More naturals than wilds, incl. extra 7s/5s']
+];
+const CARDS = [
+  ['jokers', 'Jokers', 'joker'],
+  ['twos', '2s', 'two'],
+  ['aces', 'Aces', 'ace'],
+  ['high', '8 through King', 'high'],
+  ['low', '4 through 7', 'low']
+];
+
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const clone = o => JSON.parse(JSON.stringify(o));
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => Math.abs(n).toLocaleString('en-US');
+const signed = n => (n < 0 ? '−' : n > 0 ? '+' : '') + fmt(n);
+const plain = n => (n < 0 ? '−' : '') + fmt(n);
+
+function blankRound() {
+  return {
+    wentOut: false,
+    books: { sevens: 0, fives: 0, wilds: 0, clean: 0, dirty: 0 },
+    red3Down: 0,
+    down: { mode: 'cards', jokers: 0, twos: 0, aces: 0, high: 0, low: 0, total: 0 },
+    left: { mode: 'cards', jokers: 0, twos: 0, aces: 0, high: 0, low: 0, total: 0, red3: 0, black3: 0 }
+  };
+}
+const newGame = name => ({ name, rounds: [], draft: blankRound(), editing: null });
+
+let settings = { ...HOUSE, ...(store.get('hkf.settings') || {}) };
+let game = store.get('hkf.game.v2') || newGame('');
+let ui = { tab: 'score', confirm: null };
+
+function persist() { store.set('hkf.game.v2', game); store.set('hkf.settings', settings); }
+
+function cardPoints(c) {
+  const s = settings;
+  return c.jokers * s.joker + c.twos * s.two + c.aces * s.ace + c.high * s.high + c.low * s.low;
+}
+function score(r) {
+  const s = settings;
+  const books = BOOKS.reduce((a, [k]) => a + r.books[k] * s['book_' + k], 0);
+  // A full set of red 3s scores the set bonus instead of its per-card value; extras score per card.
+  const sets = s.redThreeBonusAt > 0 ? Math.floor(r.red3Down / s.redThreeBonusAt) : 0;
+  const red3 = sets * s.redThreeBonus + (r.red3Down - sets * s.redThreeBonusAt) * s.redThreeEach;
+  const down = s.countLaidDown ? (r.down.mode === 'total' ? r.down.total : cardPoints(r.down)) : 0;
+  const left = r.left.mode === 'total' ? r.left.total : cardPoints(r.left);
+  const threes = r.left.red3 * s.redThreeHeld + r.left.black3 * s.blackThreeHeld;
+  const out = r.wentOut ? s.goingOut : 0;
+  return { books, red3, down, left, threes, out, total: books + red3 + down - left - threes + out };
+}
+const missingBooks = r => BOOKS.filter(([k]) => r.books[k] < 1).map(([, l]) => l);
+const gameTotal = () => game.rounds.reduce((a, r) => a + score(r).total, 0);
+const isBlank = r => JSON.stringify(r) === JSON.stringify(blankRound());
+const teamName = () => game.name.trim() || 'Our team';
+
+function getPath(obj, path) { return path.split('.').reduce((o, k) => o[k], obj); }
+function setPath(obj, path, v) { const ks = path.split('.'); const last = ks.pop(); ks.reduce((o, k) => o[k], obj)[last] = v; }
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.textContent = ''; }, 2200);
+}
+
+/* ---------- Score tab ---------- */
+function renderBoard() {
+  const total = gameTotal();
+  const n = game.rounds.length;
+  const last = n ? score(game.rounds[n - 1]).total : null;
+  $('#board').innerHTML = `
+    <div>
+      <div class="tname">${esc(teamName())}</div>
+      <div class="ttotal${total < 0 ? ' neg' : ''}">${plain(total)}</div>
+    </div>
+    <div class="meta">${n
+      ? `${n} round${n === 1 ? '' : 's'} played<br>Last round <b>${signed(last)}</b>`
+      : 'New game<br>Score your first round below'}</div>`;
+}
+
+function renderHistory() {
+  const box = $('#historybox');
+  if (!game.rounds.length) { box.hidden = true; return; }
+  box.hidden = false;
+  let run = 0;
+  box.innerHTML = `<h3 style="margin-bottom:4px">Rounds</h3>
+    <table class="hist">
+      <thead><tr><th>Round</th><th>Score</th><th>Total</th><th></th></tr></thead>
+      <tbody>${game.rounds.map((r, i) => {
+        const v = score(r).total; run += v;
+        return `<tr class="${game.editing === i ? 'editing' : ''}">
+          <td>${i + 1}</td>
+          <td class="${v < 0 ? 'neg' : ''}">${signed(v)}${r.wentOut ? '<span class="outtag">out</span>' : ''}</td>
+          <td class="run${run < 0 ? ' neg' : ''}">${plain(run)}</td>
+          <td><button type="button" class="linkbtn" data-edit="${i}" aria-label="Edit round ${i + 1}">${game.editing === i ? 'Editing' : 'Edit'}</button></td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table>`;
+}
+
+function stepper(path, val, label, sub) {
+  const id = 'f-' + path.replace(/\./g, '-');
+  return `<div class="row">
+    <label class="lbl" for="${id}"><b>${label}</b>${sub ? `<small>${sub}</small>` : ''}</label>
+    <div class="stepper">
+      <button type="button" data-step="-1" data-path="${path}" aria-label="One fewer ${label}">−</button>
+      <input class="num" id="${id}" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" data-path="${path}" value="${val}">
+      <button type="button" data-step="1" data-path="${path}" aria-label="One more ${label}">+</button>
+    </div>
+  </div>`;
+}
+function totalField(path, val, label) {
+  const id = 'f-' + path.replace(/\./g, '-');
+  return `<div class="row">
+    <label class="lbl" for="${id}"><b>${label}</b><small>Points, counted by hand</small></label>
+    <input class="num wide" id="${id}" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" data-path="${path}" value="${val}">
+  </div>`;
+}
+function modeSeg(group, mode) {
+  return `<div class="seg" role="group" aria-label="How to enter these cards">
+    <button type="button" data-mode="${group}" data-val="cards" aria-pressed="${mode === 'cards'}">Count cards</button>
+    <button type="button" data-mode="${group}" data-val="total" aria-pressed="${mode === 'total'}">Type total</button>
+  </div>`;
+}
+const cardRows = (group, c) => CARDS.map(([k, l, sk]) => stepper(`${group}.${k}`, c[k], l, `${fmt(settings[sk])} each`)).join('');
+
+function renderRound() {
+  const r = game.draft;
+  const s = settings;
+  const title = game.editing !== null ? `Editing round ${game.editing + 1}` : `Round ${game.rounds.length + 1}`;
+  $('#roundbox').innerHTML = `
+    <h2>${title}</h2>
+    <div class="stack">
+      <h3>Did your team go out?</h3>
+      <div class="seg" role="group" aria-label="Did your team go out">
+        <button type="button" data-out="no" aria-pressed="${!r.wentOut}">No</button>
+        <button type="button" data-out="yes" aria-pressed="${r.wentOut}">Yes, we went out</button>
+      </div>
+      <div id="outmsg"></div>
+    </div>
+    <div class="block">
+      <div class="bhead"><h3>Books closed</h3><span class="sub" id="sub-books"></span></div>
+      <div class="req" id="req" aria-label="Required books"></div>
+      ${BOOKS.map(([k, l, dsc]) => stepper('books.' + k, r.books[k], l, `${dsc} · ${fmt(s['book_' + k])} each`)).join('')}
+    </div>
+    <div class="block">
+      <div class="bhead"><h3>Red 3s banked</h3><span class="sub" id="sub-red3"></span></div>
+      ${stepper('red3Down', r.red3Down, 'Red 3s', `${fmt(s.redThreeEach)} each · ${fmt(s.redThreeBonus)} for ${s.redThreeBonusAt}`)}
+    </div>
+    <div class="block stack" style="gap:6px">
+      <div class="bhead"><h3>Cards in books</h3><span class="sub" id="sub-down"></span></div>
+      ${s.countLaidDown
+        ? `<p class="muted">Every card your team laid down this round.</p>${modeSeg('down', r.down.mode)}<div>${r.down.mode === 'total' ? totalField('down.total', r.down.total, 'Laid-down points') : cardRows('down', r.down)}</div>`
+        : '<p class="muted">Laid-down cards don’t count with your current point settings. Turn it on in Points.</p>'}
+    </div>
+    <div class="block stack" style="gap:6px">
+      <div class="bhead"><h3>Caught holding</h3><span class="sub" id="sub-left"></span></div>
+      <p class="muted">Cards still in your hand, knee or foot at the end. Both partners combined.</p>
+      ${modeSeg('left', r.left.mode)}
+      <div>
+        ${r.left.mode === 'total' ? totalField('left.total', r.left.total, 'Points held') : cardRows('left', r.left)}
+        ${stepper('left.red3', r.left.red3, 'Red 3s held', `−${fmt(s.redThreeHeld)} each`)}
+        ${stepper('left.black3', r.left.black3, 'Black 3s held', `−${fmt(s.blackThreeHeld)} each`)}
+      </div>
+    </div>
+    <div class="block">
+      <div class="bhead"><h3>This round</h3></div>
+      <table class="breakdown" id="breakdown"></table>
+    </div>`;
+  recalc();
+}
+
+function recalc() {
+  const r = game.draft;
+  const sc = score(r);
+  const s = settings;
+  const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+
+  set('sub-books', signed(sc.books));
+  set('sub-red3', signed(sc.red3));
+  set('sub-down', signed(sc.down));
+  set('sub-left', signed(-(sc.left + sc.threes)));
+
+  const req = document.getElementById('req');
+  if (req) req.innerHTML = BOOKS.map(([k, l]) => `<span class="chip${r.books[k] > 0 ? ' on' : ''}">${r.books[k] > 0 ? '✓ ' : ''}${l}</span>`).join('');
+
+  const lines = [
+    ['Book bonuses', sc.books],
+    ['Red 3s banked', sc.red3],
+    ['Cards in books', sc.down],
+    ['Cards held', -sc.left],
+    ['3s held', -sc.threes]
+  ];
+  if (s.goingOut) lines.push(['Going out', sc.out]);
+  const bd = document.getElementById('breakdown');
+  if (bd) bd.innerHTML = lines.map(([l, v]) => `<tr><td>${l}</td><td class="${v < 0 ? 'neg' : ''}">${signed(v)}</td></tr>`).join('')
+    + `<tr class="sum"><td>Round total</td><td class="${sc.total < 0 ? 'neg' : ''}">${signed(sc.total)}</td></tr>`;
+
+  const outmsg = document.getElementById('outmsg');
+  if (outmsg) {
+    const miss = missingBooks(r);
+    outmsg.innerHTML = !r.wentOut ? ''
+      : miss.length
+        ? `<p class="warn">Still missing: <strong>${miss.join(', ')}</strong>. House rules say you can’t go out without all five books.</p>`
+        : '<p class="ok">All five required books are closed.</p>';
+  }
+  renderBar();
+  persist();
+}
+
+function renderBar() {
+  const bar = $('#bar');
+  if (ui.tab !== 'score') { bar.hidden = true; $('#main').classList.add('no-bar'); return; }
+  bar.hidden = false; $('#main').classList.remove('no-bar');
+  const r = game.draft;
+  const round = score(r).total;
+  const base = gameTotal() - (game.editing !== null ? score(game.rounds[game.editing]).total : 0);
+  const totals = `<span>This round <b>${signed(round)}</b></span><span>Game total <b>${plain(base + round)}</b></span>`;
+  const inner = $('#barinner');
+  if (ui.confirm === 'delete') {
+    inner.innerHTML = `<div class="bartotals"><span><b>Delete round ${game.editing + 1}?</b></span></div>
+      <div class="btnrow"><button type="button" class="btn" data-act="keep">Keep</button><button type="button" class="btn primary" data-act="delete-yes">Delete</button></div>`;
+    return;
+  }
+  if (game.editing !== null) {
+    inner.innerHTML = `<div class="bartotals">${totals}</div>
+      <div class="btnrow">
+        <button type="button" class="btn danger" data-act="delete" aria-label="Delete round ${game.editing + 1}">Delete</button>
+        <button type="button" class="btn" data-act="cancel">Cancel</button>
+        <button type="button" class="btn primary" data-act="save">Update</button>
+      </div>`;
+    return;
+  }
+  inner.innerHTML = `<div class="bartotals">${totals}</div>
+    <button type="button" class="btn primary" data-act="save" ${isBlank(r) ? 'disabled' : ''}>Save round ${game.rounds.length + 1}</button>`;
+}
+
+function renderGame() {
+  $('#gamebox').innerHTML = `
+    <h3>Game</h3>
+    <label class="namefield"><span>Team name (optional)</span>
+      <input type="text" id="team-name" data-name="1" value="${esc(game.name)}" maxlength="30" autocomplete="off" placeholder="Our team"></label>
+    ${ui.confirm === 'newgame'
+      ? `<div class="warn stack" style="gap:8px"><p>Clear every round and start over? Your team name stays.</p>
+         <div class="btnrow" style="justify-content:flex-start"><button type="button" class="btn" data-act="keep">Keep playing</button><button type="button" class="btn primary" data-act="newgame-yes">Start new game</button></div></div>`
+      : `<div><button type="button" class="btn" data-act="newgame">New game</button></div>`}
+    <p class="muted">Scores are saved on this phone only.</p>`;
+}
+
+function renderScore() { renderBoard(); renderHistory(); renderRound(); renderGame(); }
+
+/* ---------- Rules tab ---------- */
+function renderRules() {
+  const s = settings;
+  $('#panel-rules').innerHTML = `
+    <div class="card stack">
+      <h2>Quick rules</h2>
+      <p class="muted">House rules · 6 decks with jokers · 4–6 players in partnerships</p>
+      <div class="deal" aria-label="Each player deals out 15 hand, 13 knee, 11 foot">
+        <div><b>15</b><span>Hand</span></div><div><b>13</b><span>Knee</span></div><div><b>11</b><span>Foot</span></div>
+      </div>
+      <p>Everyone deals out their own cards. Keep the knee and foot face down until you can pick them up.</p>
+      <div><a class="btn" href="rules-sheet.pdf" download="hand-knee-foot-rules.pdf">Download printable rules (PDF)</a></div>
+    </div>
+    <div class="card stack">
+      <h3>Your turn</h3>
+      <ol>
+        <li><strong>Draw 2</strong> from the stock, or take the discard pile.</li>
+        <li><strong>Lay down</strong> 3 or more of a rank, or add to your team’s piles.</li>
+        <li><strong>Discard 1</strong> to end your turn.</li>
+      </ol>
+      <p>You can only take the discard pile if you hold <strong>2 cards matching the top card</strong> and lay all three down. You take the <strong>entire pile</strong>.</p>
+    </div>
+    <div class="card stack">
+      <h3>Knee &amp; foot</h3>
+      <ul>
+        <li><strong>Knee:</strong> once your team completes its first book. You and your partner can both pick up at the same time.</li>
+        <li><strong>Foot:</strong> once you’ve played every card in your hand.</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Books · 7 cards each</h3>
+      <p>Wild cards are <strong>2s and jokers</strong>. All five books are required before your team can go out.</p>
+      <table class="vals">
+        <tr><td><strong>Sevens</strong><small>Seven 7s, no wilds</small></td><td>${fmt(s.book_sevens)}</td></tr>
+        <tr><td><strong>Fives</strong><small>Seven 5s, no wilds</small></td><td>${fmt(s.book_fives)}</td></tr>
+        <tr><td><strong>Wilds</strong><small>Seven 2s and jokers</small></td><td>${fmt(s.book_wilds)}</td></tr>
+        <tr><td><strong>Clean</strong><small>Seven of one rank, any suits, no wilds</small></td><td>${fmt(s.book_clean)}</td></tr>
+        <tr><td><strong>Dirty</strong><small>Seven of one rank with wilds, like five 9s and two 2s. A dirty pile must always have more naturals than wilds, even while you build it: a pile of 6s needs more 6s than 2s and jokers.</small></td><td>${fmt(s.book_dirty)}</td></tr>
+      </table>
+      <p>The required sevens and fives must be <strong>clean</strong>. Once they’re closed, extra 7s or 5s piles may use wilds and score as dirty books.</p>
+    </div>
+    <div class="card stack">
+      <h3>Threes</h3>
+      <ul>
+        <li><strong>Red 3s:</strong> bank them right away by laying them face up in front of you. On your first turn, draw a replacement for each red 3 you were dealt.</li>
+        <li>Each banked red 3 is worth <strong>${fmt(s.redThreeEach)}</strong>. ${s.redThreeBonusAt} together are worth <strong>${fmt(s.redThreeBonus)}</strong>, and each one after that adds ${fmt(s.redThreeEach)}. Example: 5 red 3s = ${fmt(Math.min(5, s.redThreeBonusAt - 1) * s.redThreeEach)}, ${s.redThreeBonusAt + 1} red 3s = ${fmt(s.redThreeBonus + s.redThreeEach)}.</li>
+        <li><strong>Black 3s:</strong> can’t go in a book. Discard them.</li>
+        <li>Held at the end: red 3 <strong>−${fmt(s.redThreeHeld)}</strong>, black 3 <strong>−${fmt(s.blackThreeHeld)}</strong> each.</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Card values</h3>
+      <table class="vals">
+        <tr><td>Joker</td><td>${fmt(s.joker)}</td></tr>
+        <tr><td>2</td><td>${fmt(s.two)}</td></tr>
+        <tr><td>Ace</td><td>${fmt(s.ace)}</td></tr>
+        <tr><td>8 through King</td><td>${fmt(s.high)}</td></tr>
+        <tr><td>4 through 7</td><td>${fmt(s.low)}</td></tr>
+      </table>
+      <p class="muted">Cards laid down count for your team. Cards left in your hand, knee or foot count against you.</p>
+    </div>`;
+}
+
+/* ---------- Points tab ---------- */
+const VALUE_GROUPS = [
+  ['Book bonuses', [['book_sevens', 'Sevens'], ['book_fives', 'Fives'], ['book_wilds', 'Wilds'], ['book_clean', 'Clean book'], ['book_dirty', 'Dirty book']]],
+  ['Card values', [['joker', 'Joker'], ['two', '2'], ['ace', 'Ace'], ['high', '8 through King'], ['low', '4 through 7']]],
+  ['Threes', [['redThreeEach', 'Each red 3 banked'], ['redThreeBonus', 'Full set of red 3s'], ['redThreeBonusAt', 'Red 3s in a full set'], ['redThreeHeld', 'Red 3 held (penalty)'], ['blackThreeHeld', 'Black 3 held (penalty)']]],
+  ['Going out', [['goingOut', 'Bonus for going out']]]
+];
+const valuesChanged = () => Object.keys(HOUSE).some(k => settings[k] !== HOUSE[k]);
+function renderValues() {
+  const s = settings;
+  $('#panel-values').innerHTML = `
+    <div class="stack" style="gap:4px">
+      <h2>Point values</h2>
+      <p class="muted">Set to your house rules. A change rescores every round in this game.</p>
+    </div>
+    ${VALUE_GROUPS.map(([g, fields]) => `
+      <div class="card">
+        <h3 style="margin-bottom:4px">${g}</h3>
+        ${fields.map(([k, l]) => `<div class="field"><label for="v-${k}">${l}</label>
+          <input class="num wide" type="text" inputmode="numeric" pattern="[0-9]*" id="v-${k}" data-set="${k}" value="${s[k]}" autocomplete="off"></div>`).join('')}
+        ${g === 'Going out' ? `<div class="field"><label for="v-countLaidDown">Count cards in books toward score</label>
+          <input class="switch" type="checkbox" id="v-countLaidDown" data-set="countLaidDown" ${s.countLaidDown ? 'checked' : ''}></div>` : ''}
+      </div>`).join('')}
+    <div><button type="button" class="btn" data-act="reset-values" ${valuesChanged() ? '' : 'disabled'}>Reset to house rules</button></div>`;
+}
+
+/* ---------- Tabs ---------- */
+function showTab(tab) {
+  ui.tab = tab;
+  document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+  ['score', 'rules', 'values'].forEach(t => { $('#panel-' + t).hidden = t !== tab; });
+  if (tab === 'rules') renderRules();
+  if (tab === 'values') renderValues();
+  if (tab === 'score') renderScore();
+  renderBar();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- Events ---------- */
+const toInt = v => { const n = parseInt(String(v).replace(/[^0-9]/g, ''), 10); return Number.isFinite(n) ? Math.min(n, 99999) : 0; };
+const resetDraft = () => { game.draft = blankRound(); game.editing = null; ui.confirm = null; };
+
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('button');
+  if (!b || b.disabled) return;
+  const r = game.draft;
+
+  if (b.dataset.tab) return showTab(b.dataset.tab);
+
+  if (b.dataset.step) {
+    const v = Math.max(0, getPath(r, b.dataset.path) + Number(b.dataset.step));
+    setPath(r, b.dataset.path, v);
+    const input = document.querySelector(`input[data-path="${b.dataset.path}"]`);
+    if (input) input.value = v;
+    return recalc();
+  }
+  if (b.dataset.mode) { r[b.dataset.mode].mode = b.dataset.val; return renderRound(); }
+  if (b.dataset.out) {
+    r.wentOut = b.dataset.out === 'yes';
+    document.querySelectorAll('[data-out]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    return recalc();
+  }
+  if (b.dataset.edit) {
+    const i = Number(b.dataset.edit);
+    game.draft = clone(game.rounds[i]); game.editing = i; ui.confirm = null;
+    persist(); renderScore();
+    $('#roundbox').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  switch (b.dataset.act) {
+    case 'save': {
+      const num = game.editing !== null ? game.editing + 1 : game.rounds.length + 1;
+      if (game.editing !== null) game.rounds[game.editing] = clone(r); else game.rounds.push(clone(r));
+      resetDraft(); persist(); renderScore();
+      toast(`Round ${num} saved`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      break;
+    }
+    case 'cancel': resetDraft(); persist(); renderScore(); break;
+    case 'delete': ui.confirm = 'delete'; renderBar(); break;
+    case 'delete-yes': {
+      const num = game.editing + 1;
+      game.rounds.splice(game.editing, 1);
+      resetDraft(); persist(); renderScore(); toast(`Round ${num} deleted`); break;
+    }
+    case 'keep': ui.confirm = null; renderBar(); renderGame(); break;
+    case 'newgame': ui.confirm = 'newgame'; renderGame(); break;
+    case 'newgame-yes':
+      game = newGame(game.name); ui.confirm = null;
+      persist(); renderScore(); toast('New game started'); window.scrollTo({ top: 0, behavior: 'smooth' }); break;
+    case 'reset-values':
+      settings = { ...HOUSE }; persist(); renderValues(); toast('Point values reset'); break;
+  }
+});
+
+document.addEventListener('input', ev => {
+  const t = ev.target;
+  if (t.dataset.path) { setPath(game.draft, t.dataset.path, toInt(t.value)); return recalc(); }
+  if (t.dataset.name) { game.name = t.value; persist(); return renderBoard(); }
+  if (t.dataset.set) {
+    settings[t.dataset.set] = t.type === 'checkbox' ? t.checked : toInt(t.value);
+    persist();
+    const reset = document.querySelector('[data-act="reset-values"]');
+    if (reset) reset.disabled = !valuesChanged();
+  }
+});
+document.addEventListener('focusin', ev => {
+  if (ev.target.matches('input.num')) setTimeout(() => ev.target.select(), 0);
+});
+document.addEventListener('change', ev => {
+  const t = ev.target;
+  if (t.dataset.path) t.value = getPath(game.draft, t.dataset.path);
+  if (t.dataset.set && t.type !== 'checkbox') t.value = settings[t.dataset.set];
+});
+
+/* ---------- Boot ---------- */
+function start() { showTab(ui.tab); }
+start();
+</script>
+</body>
+</html>

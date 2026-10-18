@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hand, Knee &amp; Foot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,700&family=Libre+Franklin:wght@400;600;700&display=swap">
+<style>
+/* One letter-size sheet, two columns: how to play on the left, books and scoring on the right.
+   Single paper theme on purpose: it is meant to be printed in red and black ink. */
+:root {
+  --paper: #ffffff;
+  --desk: #d9d6d2;
+  --ink: #1b1a19;
+  --ink-soft: #55514d;
+  --rule: #c9c4be;
+  --suit-red: #b1222c;
+  --tint: #f6efee;
+  --display: 'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, serif;
+  --body: 'Libre Franklin', 'Helvetica Neue', Arial, sans-serif;
+  color-scheme: light;
+}
+@page { size: letter; margin: 0.4in; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--desk);
+  color: var(--ink);
+  font: 9.6pt/1.38 var(--body);
+  padding-block: 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.sheet {
+  width: 8.5in;
+  max-width: 100%;
+  min-height: 11in;
+  margin: 0 auto;
+  padding: 0.4in;
+  background: var(--paper);
+  box-shadow: 0 2px 14px rgb(0 0 0 / .18);
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--ink);
+}
+.eyebrow {
+  margin: 0 0 2px;
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--suit-red);
+}
+h1 {
+  margin: 0;
+  font: 700 30pt/1 var(--display);
+  letter-spacing: -.01em;
+  text-wrap: balance;
+}
+h1 .amp { color: var(--suit-red); font-weight: 500; font-style: italic; }
+.sub { margin: 4px 0 0; color: var(--ink-soft); }
+.stacks { display: flex; gap: 7px; }
+.stack {
+  width: 0.72in;
+  padding: 6px 0 5px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  text-align: center;
+  box-shadow: 2px 2px 0 var(--paper), 3px 3px 0 var(--ink);
+}
+.stack b { display: block; font: 700 19pt/1 var(--display); font-variant-numeric: lining-nums; }
+.stack span { font-size: 7pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.3in;
+  margin-top: 12px;
+}
+.cols > div { min-width: 0; }
+h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 12px 0 5px;
+  font: 700 12.5pt/1.2 var(--display);
+}
+.cols > div > h2:first-child { margin-top: 0; }
+h2 .suit { font-family: var(--body); font-size: 10pt; }
+.red { color: var(--suit-red); }
+p { margin: 0 0 5px; }
+ul, ol { margin: 0 0 5px; padding-left: 16px; }
+li { margin: 0 0 3px; }
+li::marker { color: var(--suit-red); font-weight: 700; }
+strong { font-weight: 700; }
+.note {
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  border-left: 3px solid var(--suit-red);
+  background: var(--tint);
+}
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { padding: 4px 0; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+th { font-size: 7pt; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; }
+td.pts, th.pts { text-align: right; white-space: nowrap; padding-left: 8px; }
+td.pts { font-weight: 700; }
+td small { display: block; color: var(--ink-soft); font-size: 8pt; line-height: 1.3; }
+tr.minus td.pts { color: var(--suit-red); }
+.checks { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 6px 0 0; }
+.checks div {
+  padding: 4px 2px;
+  border: 1px dashed var(--ink-soft);
+  border-radius: 4px;
+  text-align: center;
+  font-size: 7.5pt;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.checks div::before { content: '☐'; display: block; font-size: 11pt; }
+footer {
+  margin-top: 12px;
+  padding-top: 6px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 7.5pt;
+  color: var(--ink-soft);
+}
+@media (max-width: 760px) {
+  .sheet { min-height: 0; padding: 20px 16px; }
+  .cols { grid-template-columns: 1fr; }
+  .cols > div + div > h2:first-child { margin-top: 12px; }
+}
+@media print {
+  body { background: var(--paper); padding: 0; }
+  .sheet { width: auto; min-height: 0; padding: 0; box-shadow: none; }
+  .cols { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<article class="sheet">
+  <header>
+    <div>
+      <p class="eyebrow">House rules · 6 decks with jokers · 4–6 players</p>
+      <h1>Hand <span class="amp">Knee &amp;</span> Foot</h1>
+      <p class="sub">Play in partnerships. Partners share books.</p>
+    </div>
+    <div class="stacks" aria-label="Each player counts out 15 cards for the hand, 13 for the knee and 11 for the foot">
+      <div class="stack"><b>15</b><span>Hand</span></div>
+      <div class="stack"><b>13</b><span>Knee</span></div>
+      <div class="stack"><b>11</b><span>Foot</span></div>
+    </div>
+  </header>
+
+  <div class="cols">
+    <div>
+      <h2><span class="suit">♠</span>The deal</h2>
+      <p>Shuffle all six decks together. Everyone deals out their own cards: <strong>15 for the hand</strong>, <strong>13 for the knee</strong>, <strong>11 for the foot</strong>. Keep the knee and foot face down and don’t look at them.</p>
+      <p>Start a discard pile with one card from the stock.</p>
+
+      <h2><span class="suit red">♥</span>Your turn</h2>
+      <ol>
+        <li><strong>Draw 2</strong> from the stock, or take the discard pile (below).</li>
+        <li><strong>Lay down</strong> cards: start a new pile with 3 or more of a rank, or add to your team’s piles.</li>
+        <li><strong>Discard 1</strong> to end your turn.</li>
+      </ol>
+      <p><strong>Taking the discard pile:</strong> only if you hold <strong>2 cards matching the top card</strong> and lay all three down right away. You take the <strong>entire pile</strong>.</p>
+
+      <h2><span class="suit">♣</span>Knee &amp; foot</h2>
+      <ul>
+        <li><strong>Knee:</strong> pick it up once your team completes its <strong>first book</strong>. You and your partner can both pick up at the same time. It goes into your hand.</li>
+        <li><strong>Foot:</strong> pick it up once you have played <strong>every card in your hand</strong>.</li>
+      </ul>
+
+      <h2><span class="suit red">♦</span>Threes</h2>
+      <ul>
+        <li><strong class="red">Red 3s</strong> are banked right away: lay them face up in front of you as soon as you get them. On your first turn, draw a replacement for each red 3 you were dealt.</li>
+        <li>Each banked red 3 is worth <strong>100</strong>. <strong>Seven</strong> together are worth <strong>1,000</strong>, and each one after that adds 100. <span style="white-space:nowrap">5 red 3s = 500;</span> <span style="white-space:nowrap">8 red 3s = 1,100.</span></li>
+        <li><strong>Black 3s</strong> can’t go in a book. Get rid of them by discarding.</li>
+        <li>Any 3s still in your cards at the end count against you (see scoring).</li>
+      </ul>
+
+      <h2><span class="suit">♠</span>Going out</h2>
+      <p>You <strong>cannot go out</strong> until your team has all five required books. Then play out your foot to end the round.</p>
+      <div class="checks" aria-label="Required books checklist">
+        <div>Wilds</div><div>Clean</div><div>Dirty</div><div>Sevens</div><div>Fives</div>
+      </div>
+    </div>
+
+    <div>
+      <h2><span class="suit red">♥</span>Books</h2>
+      <p><strong>Seven cards make a book.</strong> Wild cards are <strong>2s and jokers</strong>.</p>
+      <table>
+        <thead><tr><th>Book</th><th class="pts">Bonus</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Sevens</strong><small>Seven 7s, no wilds.</small></td><td class="pts">5,000</td></tr>
+          <tr><td><strong>Fives</strong><small>Seven 5s, no wilds.</small></td><td class="pts">3,000</td></tr>
+          <tr><td><strong>Wilds</strong><small>Seven wild cards: 2s and jokers.</small></td><td class="pts">2,500</td></tr>
+          <tr><td><strong>Clean</strong><small>Seven of one rank, any suits, no wilds.</small></td><td class="pts">500</td></tr>
+          <tr><td><strong>Dirty</strong><small>Seven of one rank with wilds mixed in, such as five 9s and two 2s. A dirty pile must always have more naturals than wilds, even while you build it: a pile of 6s needs more 6s than 2s and jokers.</small></td><td class="pts">300</td></tr>
+        </tbody>
+      </table>
+      <p class="note">All five books above are <strong>required</strong> before anyone on the team can go out. The required sevens and fives must be <strong>clean</strong>. Once they’re closed, extra 7s or 5s piles may use wilds and score as dirty books.</p>
+
+      <h2><span class="suit">♣</span>Card values</h2>
+      <table>
+        <thead><tr><th>Card</th><th class="pts">Points</th></tr></thead>
+        <tbody>
+          <tr><td>Joker</td><td class="pts">50</td></tr>
+          <tr><td>2 (wild)</td><td class="pts">20</td></tr>
+          <tr><td>Ace</td><td class="pts">20</td></tr>
+          <tr><td>8 through King</td><td class="pts">10</td></tr>
+          <tr><td>4 through 7</td><td class="pts">5</td></tr>
+        </tbody>
+      </table>
+
+      <h2><span class="suit red">♦</span>Scoring each round</h2>
+      <table>
+        <tbody>
+          <tr><td>Book bonuses (table above)</td><td class="pts">+</td></tr>
+          <tr><td>Each red 3 banked<small>Seven together = 1,000; extras +100 each</small></td><td class="pts">+100</td></tr>
+          <tr><td>Every card your team laid down</td><td class="pts">+ value</td></tr>
+          <tr class="minus"><td>Cards left in your hand, knee or foot</td><td class="pts">− value</td></tr>
+          <tr class="minus"><td>Each <strong>red 3</strong> you couldn’t play</td><td class="pts">−500</td></tr>
+          <tr class="minus"><td>Each <strong>black 3</strong> you couldn’t play</td><td class="pts">−100</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer><span>♠ ♥ ♣ ♦ Hand, Knee &amp; Foot · house rules</span><span>Highest team total wins.</span></footer>
+</article>
+</body>
+</html>
